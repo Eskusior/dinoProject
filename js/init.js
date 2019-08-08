@@ -1,11 +1,13 @@
 // Variablen
 var player;
 var cactusObs = [];
+var score;
 
 // Startfunktion des Spiels
 function startGame() {
-	gameArea.start(); // Canvas init
 	player = new component(20, 40, "blue", 10, 200); // Spieler init
+	score = new component("30px", "Consolas", "black", 200, 40, "text");
+	gameArea.start(); // Canvas init
 }
 
 // GameArea Objekt
@@ -28,6 +30,8 @@ var gameArea = {
 		})
 		window.addEventListener('keyup', function (e) {
 			gameArea.key = false;
+			player.height = 40;
+			player.gravity = 0.1;
 		})
 	},
 	clear: function() {
@@ -40,26 +44,46 @@ var gameArea = {
 }
 
 // Komponenten Constructor
-function component(width, height, color, x, y) {
+function component(width, height, color, x, y, type) {
 	// Variablen der Komponente
-	this.gameArea = gameArea;
+	this.type = type;
 	this.width = width;
 	this.height = height;
 	this.speedX = 0;
 	this.speedY = 0;
+	this.gravity = 0.05;
+	this.gravitySpeed = 0;
 	this.x = x;
 	this.y = y;
 	// Update der Komponente pro Frame
 	this.update = function() {
 		ctx = gameArea.context;
-		ctx.fillStyle = color;
-		ctx.fillRect(this.x, this.y, this.width, this.height);
+
+		if(this.type == "text") {
+			ctx.font = this.width + " " + this.height;
+			ctx.fillStyle = color;
+			ctx.fillText(this.text, this.x, this.y);
+		}else {	
+			ctx.fillStyle = color;
+			ctx.fillRect(this.x, this.y, this.width, this.height);
+		}
 	}
 	// Position aktualisieren
 	this.newPos = function() {
+		this.gravitySpeed += this.gravity;
 		this.x += this.speedX;
-		this.y += this.speedY;
+		this.y += this.speedY + this.gravitySpeed;
+		this.hitBottom();
 	}
+
+	this.hitBottom = function() {
+		var rockbottom = gameArea.canvas.height - this.height;
+		if(this.y > rockbottom) {
+			this.y = rockbottom;
+		}
+	}
+
+
 	//Kollisionsdetektion
 	this.crashWith = function(otherobj) {
 		// Eigene Position
@@ -113,6 +137,11 @@ function updateGameArea() {
 		cactusObs[i].update();
 	}
 
+	score.text = "SCORE: " + gameArea.frameNo;
+	score.update();
+
+	playerMovement();
+
 	player.newPos();
 	player.update();
 }
@@ -131,11 +160,11 @@ function playerMovement() {
 	player.speedY = 0;
 
 	if(gameArea.key && gameArea.key == 38) {
-		player.speedY -= 1;
+		player.gravity = -0.2;
 	}
 
 	if(gameArea.key && gameArea.key == 40) {
-		player.speedY +=1;
+		player.height = 20;
 	}
 
 }
