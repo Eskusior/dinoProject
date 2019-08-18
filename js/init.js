@@ -6,7 +6,7 @@ var score;
 // Startfunktion des Spiels
 function startGame() {
 	player = new component(20, 40, "blue", 10, 200); // Spieler init
-	score = new component("30px", "Consolas", "black", 200, 40, "text");
+	score = new component("30px", "Consolas", "black", 200, 40, "text"); // Score init
 	gameArea.start(); // Canvas init
 }
 
@@ -77,7 +77,7 @@ function component(width, height, color, x, y, type) {
 	}
 
 	this.hitBottom = function() {
-		var rockbottom = gameArea.canvas.height - this.height;
+		var rockbottom = 200;
 		if(this.y > rockbottom) {
 			this.y = rockbottom;
 		}
@@ -133,7 +133,7 @@ function updateGameArea() {
 	}
 
 	for(i = 0; i < cactusObs.length; i += 1) {
-		cactusObs[i].x += -1;
+		cactusObs[i].x += -2;
 		cactusObs[i].update();
 	}
 
