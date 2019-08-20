@@ -1,56 +1,177 @@
 // Variablen
 var player;
 var cactusObs = [];
-var score;
+var scoreText;
 
-// Startfunktion des Spiels
-function startGame() {
-	player = new component(20, 40, "blue", 10, 200); // Spieler init
-	score = new component("30px", "Consolas", "black", 200, 40, "text"); // Score init
-	gameArea.start(); // Canvas init
+var context = document.querySelector("canvas").getContext("2d");
+
+context.canvas.height = 300;
+context.canvas.width = 600;
+
+// Spieler
+var player = {
+	x: 50,
+	y: 210,
+	width: 20,
+	height: 40,
+	speedY: 0,
+	jumping: false,
+	color: "green",
+	dead: false,
+	draw: function() {
+		ctx = context;
+		ctx.fillStyle = this.color;
+		ctx.fillRect(this.x, this.y, this.width, this.height);
+	}
+
 }
 
-// GameArea Objekt
-var gameArea = {
-	canvas: document.createElement("canvas"), // Canvas Typ
-
-	// onInit
-	start: function() {
-		// Größe, Breite, Context und an Body anfügen
-		this.canvas.width = 480;
-		this.canvas.height = 270;
-		this.context = this.canvas.getContext("2d");
-		document.body.insertBefore(this.canvas, document.body.childNodes[0]);
-		this.frameNo = 0;
-		this.interval = setInterval(updateGameArea, 20); // 50 FPS
-
-		// Eventlistener für Steuerung
-		window.addEventListener('keydown', function (e) {
-			gameArea.key = e.keyCode;
-		})
-		window.addEventListener('keyup', function (e) {
-			gameArea.key = false;
-			player.height = 40;
-			player.gravity = 0.1;
-		})
+// Kaktusobjekt, später Objektkonstruktor
+var cactusObs = {
+	x: 0,
+	y: 0,
+	width: 20,
+	height: 40,
+	speedX: 0,
+	color: "green",
+	draw: function() {
+		ctx = context;
+		ctx.fillStyle = this.color;
+		ctx.fillRect(this.x, this.y, this.width, this.height);
 	},
-	clear: function() {
-		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-	},
-	// Stop bei Kollision
-	stop: function() {
-		clearInterval(this.interval);
+	wasHit: function(playerObj) {
+
+			var ownLeft = this.x;
+			var ownRight = this.x + (this.width);
+			var ownTop = this.y;
+			var ownBottom = this.y + (this.height);
+	
+			// Position des Kollisionsobjektes
+			var playerObjLeft = playerObj.x;
+			var playerObjRight = playerObj.x + (playerObj.width);
+			var playerObjTop = playerObj.y;
+			var playerObjBottom = playerObj.y + (playerObj.height);
+	
+			var crashed = true;
+	
+			// Wenn keine Überlagerung --> kein Crash
+			if((ownLeft > playerObjRight) || (ownRight < playerObjLeft) || (ownTop > playerObjBottom) || (ownBottom < playerObjTop)) {
+				crashed = false;
+			}
+	
+			return crashed;
+	
 	}
 }
 
+// ScoreText
+var scoreText = {
+	x: 400,
+	y: 40,
+	points: 0,
+	fontSize: "30px",
+	fontStyle: "Consolas",
+	color: "white",
+	draw: function() {
+		ctx = context;
+		ctx.font = this.fontSize + " " + this.fontStyle;
+		ctx.fillStyle = this.color;
+		ctx.fillText(this.text, this.x, this.y);
+	}
+}
+
+// Controller für Eingaben
+var controller = {
+	up: false,
+	down: false,
+	keyListener: function(event){
+
+		var key_state = (event.type == "keydown") ? true : false;
+
+		switch(event.keyCode) {
+
+			// up
+			case 38: 
+				controller.up = key_state;
+				break;
+			// down
+			case 40:
+				controller.down = key_state;
+				break;
+
+		}
+
+	}
+}
+
+// Spielfluss
+loop = function() {
+
+	// Sprung
+	if(controller.up && player.jumping == false) {
+		player.speedY -= 20;
+		player.jumping = true;
+	}
+
+	// Ducken
+	if(controller.down) {
+		player.height = 20;
+	}
+
+	// Reset, falls Ducken gedrückt
+	player.height = 40;
+
+	// Gravitation
+	player.speedY += 1.5;
+	player.y += player.speedY;
+	player.speedY *= 0.9;
+
+	// Nicht durch Boden fallen 
+	if(player.y > 210) {
+		player.jumping = false;
+		player.y = 210;
+		player.speedY = 0;
+	}
+
+	// Score erhöhen
+	scoreText.points += 1;
+	scoreText.text = "SCORE: " + scoreText.points;
+
+	// Komponenten aktualisieren
+	context.fillStyle = "#202020";
+    context.fillRect(0, 0, 600, 300);// x, y, width, height
+	player.draw();
+	scoreText.draw();
+	
+    context.strokeStyle = "#202830";
+    context.lineWidth = 4;
+    context.beginPath();
+    context.moveTo(0, 250);
+    context.lineTo(600, 250);
+    context.stroke();
+
+	// Wenn Spieler Tod --> keine Aktualisierung mehr
+	if(player.dead == false) {
+		window.requestAnimationFrame(loop);
+	}
+
+}
+
+
+window.addEventListener("keydown", controller.keyListener);
+window.addEventListener("keyup", controller.keyListener);
+
+window.requestAnimationFrame(loop);
+
 // Komponenten Constructor
-function component(width, height, color, x, y, type) {
+function component(width, height, color, x, y, type, jumping=false) {
 	// Variablen der Komponente
 	this.type = type;
 	this.width = width;
 	this.height = height;
 	this.speedX = 0;
 	this.speedY = 0;
+	this.jumping = jumping
 	this.gravity = 0.05;
 	this.gravitySpeed = 0;
 	this.x = x;
@@ -111,61 +232,4 @@ function component(width, height, color, x, y, type) {
 	
 }
 
-// Update der GameArea pro Frame
-function updateGameArea() {
-
-	var x, y;
-
-	for(i = 0; i < cactusObs.length; i += 1) {
-		if(player.crashWith(cactusObs[i])) {
-			gameArea.stop();
-			return;
-		}
-	}
-
-	gameArea.clear();
-	gameArea.frameNo += 1;
-
-	if(gameArea.frameNo == 1 || everyInterval(150)) {
-		x = gameArea.canvas.width;
-		y = gameArea.canvas.height - 70;
-		cactusObs.push(new component(20 , 40, "green", x , y));
-	}
-
-	for(i = 0; i < cactusObs.length; i += 1) {
-		cactusObs[i].x += -2;
-		cactusObs[i].update();
-	}
-
-	score.text = "SCORE: " + gameArea.frameNo;
-	score.update();
-
-	playerMovement();
-
-	player.newPos();
-	player.update();
-}
-
-function everyInterval(n) {
-	if((gameArea.frameNo / n) % 1 == 0) {
-		return true;
-	}
-
-	return false;
-}
-
-// Steuerungsfunktion des Spielers
-function playerMovement() {
-	player.speedX = 0;
-	player.speedY = 0;
-
-	if(gameArea.key && gameArea.key == 38) {
-		player.gravity = -0.2;
-	}
-
-	if(gameArea.key && gameArea.key == 40) {
-		player.height = 20;
-	}
-
-}
 
