@@ -1,6 +1,6 @@
 // Variablen
 var player;
-var cactusObs = [];
+var obstacles = [];
 var scoreText;
 
 var context = document.querySelector("canvas").getContext("2d");
@@ -16,6 +16,7 @@ var player = {
 	height: 40,
 	speedY: 0,
 	jumping: false,
+	crouching: false,
 	color: "green",
 	dead: false,
 	draw: function() {
@@ -26,42 +27,40 @@ var player = {
 
 }
 
-// Kaktusobjekt, später Objektkonstruktor
-var cactusObs = {
-	x: 0,
-	y: 0,
-	width: 20,
-	height: 40,
-	speedX: 0,
-	color: "green",
-	draw: function() {
+function Obstacle(x, type) {
+	this.x = x;
+	this.y = type === 'cactus' ? 210 : 130;
+	this.width = 20;
+	this.height = type === 'cactus' ? 40 : 20;
+	this.speedX = 0,
+	this.color = type === 'cactus' ? 'green' : 'gray';
+	this.draw = function() {
 		ctx = context;
 		ctx.fillStyle = this.color;
 		ctx.fillRect(this.x, this.y, this.width, this.height);
-	},
-	wasHit: function(playerObj) {
-
-			var ownLeft = this.x;
-			var ownRight = this.x + (this.width);
-			var ownTop = this.y;
-			var ownBottom = this.y + (this.height);
-	
-			// Position des Kollisionsobjektes
-			var playerObjLeft = playerObj.x;
-			var playerObjRight = playerObj.x + (playerObj.width);
-			var playerObjTop = playerObj.y;
-			var playerObjBottom = playerObj.y + (playerObj.height);
-	
-			var crashed = true;
-	
-			// Wenn keine Überlagerung --> kein Crash
-			if((ownLeft > playerObjRight) || (ownRight < playerObjLeft) || (ownTop > playerObjBottom) || (ownBottom < playerObjTop)) {
-				crashed = false;
-			}
-	
-			return crashed;
-	
 	}
+	this.wasHit = function(playerObj) {
+		var ownLeft = this.x;
+		var ownRight = this.x + (this.width);
+		var ownTop = this.y;
+		var ownBottom = this.y + (this.height);
+	
+		// Position des Kollisionsobjektes
+		var playerObjLeft = playerObj.x;
+		var playerObjRight = playerObj.x + (playerObj.width);
+		var playerObjTop = playerObj.y;
+		var playerObjBottom = playerObj.y + (playerObj.height);
+	
+		var crashed = true;
+	
+		// Wenn keine Überlagerung --> kein Crash
+		if((ownLeft > playerObjRight) || (ownRight < playerObjLeft) || (ownTop > playerObjBottom) || (ownBottom < playerObjTop)) {
+			crashed = false;
+		}
+	
+		return crashed;
+	}
+
 }
 
 // ScoreText
@@ -104,6 +103,15 @@ var controller = {
 	}
 }
 
+function everyInterval(n) {
+	if ((scoreText.points / n) % 1 == 0) {
+		console.log("neues obstacle");
+		return true;
+	}
+
+	return false;
+}
+
 // Spielfluss
 loop = function() {
 
@@ -114,17 +122,25 @@ loop = function() {
 	}
 
 	// Ducken
-	if(controller.down) {
+	if(controller.down && player.crouching == false) {
 		player.height = 20;
+		player.y += 20;
+		player.crouching = true;
 	}
 
+	player.height +=1;
+
 	// Reset, falls Ducken gedrückt
-	player.height = 40;
+	if(player.height > 40){
+		player.height = 40;
+		player.crouching = false;
+	}
+		
 
 	// Gravitation
-	player.speedY += 1.5;
+	player.speedY += 1.3;
 	player.y += player.speedY;
-	player.speedY *= 0.9;
+	player.speedY *= 0.999;
 
 	// Nicht durch Boden fallen 
 	if(player.y > 210) {
@@ -133,15 +149,34 @@ loop = function() {
 		player.speedY = 0;
 	}
 
+	for (i = 0; i < obstacles.length; i+= 1) {
+		if(obstacles[i].wasHit(player)) {
+			player.dead = true;
+			return;
+		}
+	}
+
 	// Score erhöhen
 	scoreText.points += 1;
 	scoreText.text = "SCORE: " + scoreText.points;
+
+	if(scoreText == 1 || everyInterval(150)) {
+		let x = context.canvas.width;
+		obstacles.push(new Obstacle(x, 'cactus'));
+		console.log(obstacles);
+	}
 
 	// Komponenten aktualisieren
 	context.fillStyle = "#202020";
     context.fillRect(0, 0, 600, 300);// x, y, width, height
 	player.draw();
 	scoreText.draw();
+	
+
+	for(i = 0; i < obstacles.length; i += 1) {
+		obstacles[i].x -= 2;
+		obstacles[i].draw();
+	}
 	
     context.strokeStyle = "#202830";
     context.lineWidth = 4;
