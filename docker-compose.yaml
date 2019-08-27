@@ -1,0 +1,21 @@
+version: '2'
+
+services:
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 32191:8080
+    links:
+      - db
+
+  db:
+    image: mysql:5.7
+    restart: always
+    ports:
+      - 32192:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: ga4wm19
+    volumes:
+      - ../data/MySQL/:/var/lib/mysql
