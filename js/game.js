@@ -1,24 +1,34 @@
 // Variablen
-var obstacles = [];
+var obstacles = []; // Feld für Hindernisse
 
-var multiplier = 1;
+var multiplier = 1; // Multiplier für Score und Hindernisgeschwindigkeit
 
+// Spiel starten
 function startGame() {
     gameArea.start();
 }
 
+// Spielfeld
 var gameArea = {
     canvas: document.createElement("canvas"),
+
+    // Funktion zum Initialisieren
     start: function() {
+
+        // Canvas initialisieren
         this.canvas.width = 600;
         this.canvas.height = 300;
         this.context = this.canvas.getContext("2d");
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+
+        // Steuerung laden
         window.addEventListener("keydown", controller.keyListener);
         window.addEventListener("keyup", controller.keyListener);
 
+        // Multiplier starten
         window.setInterval(addOverTime, 5000);
 
+        // Spiel starten
         window.requestAnimationFrame(loop);
         
     }
@@ -34,7 +44,8 @@ var player = {
 	jumping: false,
 	crouching: false,
 	color: "green",
-	dead: false,
+    dead: false,
+    // Spieler auf Canvas zeichen
 	draw: function() {
 		ctx = gameArea.context;
 		ctx.fillStyle = this.color;
@@ -43,9 +54,11 @@ var player = {
 
 }
 
+// Hindernis 
 function Obstacle(x, type, pos) {
 	this.x = x;
     
+    // Unterschiedliche Höhen für Vögel und Kakteen
     switch(pos) {
         case "ground":
             this.y = 230;
@@ -68,7 +81,9 @@ function Obstacle(x, type, pos) {
 		ctx = gameArea.context;
 		ctx.fillStyle = this.color;
 		ctx.fillRect(this.x, this.y, this.width, this.height);
-	}
+    }
+    
+    // Überprüfung auf Kollision mit Spieler
 	this.wasHit = function(playerObj) {
 		var ownLeft = this.x;
 		var ownRight = this.x + (this.width);
@@ -133,6 +148,7 @@ var controller = {
 	}
 }
 
+// Auf bestimmtes Interval prüfen, für Spawnen neuer Hindernisse
 function everyInterval(n) {
 	if ((scoreText.points / n) % 1 == 0) {
 		return true;
@@ -141,21 +157,22 @@ function everyInterval(n) {
 	return false;
 }
 
+// Multiplier über zeit erhöhen bis 10
 addOverTime = function() {
 
-    multiplier =  Math.round((multiplier + 0.1) * 10) / 10;
+    multiplier =  Math.round((multiplier + 0.1) * 10) / 10; // Runden auf 1 Nachkommastelle
 
     if(multiplier >= 10) {
-        window.clearInterval(multiplier);
+        window.clearInterval(multiplier); // Abbruch des Erhöhens
     }
 }
 
+// Zufälliges Objekt spawnen
 function spawnRandomObstacle() {
     let randNumber = Math.floor((Math.random() * 20) + 1);
     let x = gameArea.context.canvas.width;
     
-    console.log(randNumber);
-    
+    // Je nach Zufallszahl Objekt erstellen
     switch(randNumber) {
         case 1:
             obstacles.push(new Obstacle(x, 'bird', 'ground'));
@@ -178,8 +195,6 @@ function spawnRandomObstacle() {
         default:
             obstacles.push(new Obstacle(x, 'cactus', 'cactusGround'));
     }
-
-
 }
 
 // Spielfluss
@@ -197,8 +212,6 @@ loop = function() {
 		player.y += 20;
 		player.crouching = true;
 	}
-
-	player.height +=1;
 
 	// Reset, falls Ducken gedrückt
 	if(player.height > 40){
@@ -219,12 +232,13 @@ loop = function() {
 		player.speedY = 0;
 	}
 
-    let ctx = gameArea.context;
+    let ctx = gameArea.context; // Kontext zum Spielfeld
 
     // Score erhöhen
 	scoreText.points = Math.floor(scoreText.points + (1 * multiplier));
 	scoreText.text = "SCORE: " + scoreText.points;
 
+    // Neues Hindernis alle 200 Frames
 	if(scoreText == 10 || everyInterval(200)) {
 		spawnRandomObstacle();
 	}
@@ -248,6 +262,7 @@ loop = function() {
     ctx.lineTo(600, 250);
     ctx.stroke();
 
+    // Hitüberprüfung
     for (i = 0; i < obstacles.length; i+= 1) {
 		if(obstacles[i].wasHit(player)) {
 			player.dead = true;
@@ -257,7 +272,7 @@ loop = function() {
 
 	// Wenn Spieler Tod --> keine Aktualisierung mehr
 	if(player.dead == false) {
-		window.requestAnimationFrame(loop);
+        window.requestAnimationFrame(loop);
 	}
 
 }

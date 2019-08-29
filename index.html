@@ -3,11 +3,29 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>GA4WM-Dinogame</title>
+	<title>DinoProject</title>
 	<link rel="stylesheet" href="./css/styles.css"/>
 </head>
 <body>
-	<button onclick="startGame()">Testbutton</button>
+	<div class="session">
+		<span class="question">Besitzen Sie bereits eine Session?</span>
+		<button class="button decline" onclick="createNewSession()">Nein</button>
+		<button class="button accept" onclick="getOldSessionId()">Ja</button>
+	</div>
+	<div class="existingSession">
+		<span class="">Bitten geben Sie Ihre alte Session-ID an: </span>
+		<input type="number">
+		<button class="button decline" onclick="createNewSession()">Abbrechen</button>
+		<button class="button accept" onclick="loadSessionHighscore()">Ja</button>
+	</div>
+	<div class="getInputDevice">
+		<span class="">Ihre Session-ID ist: </span>
+		<span class="">Ihr Highscore beträgt: </span>
+		<span class="">Wie wollen Sie das Spiel spielen?</span>
+		<button class="button " onclick="setOneDevice()">An einem Gerät</button>
+		<button class="button " onclick="setTwoDevices()">An zwei Geräten</button>
+	</div>
+<script src="./js/scripts.js"></script>
 <script src="./js/game.js"></script>
 </body>
 </html>
