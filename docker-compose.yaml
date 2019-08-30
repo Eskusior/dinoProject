@@ -19,3 +19,9 @@ services:
       MYSQL_ROOT_PASSWORD: ga4wm19
     volumes:
       - ../data/MySQL/:/var/lib/mysql
+
+  webserver:
+     build: ./Webserver/
+     restart: always
+     ports:
+       - 32193:5002
