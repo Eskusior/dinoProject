@@ -1,4 +1,66 @@
 canvas {
 	border:1px solid #d3d3d3;
     background-color: #f1f1f1;
+    width: 50vw;
+    height: 50vh;
+}
+
+#menu {
+    background-color: #d3d3d3;
+    text-align: center;
+    width: 50vw;
+    height: 50vh;
+    margin: auto;
+    font-size: 14px;
+    padding: 5px;
+}
+
+.menuHeadline {
+    font-size: 20px;
+    margin: 2px 0;
+    text-decoration: underline;
+}
+
+.menuButtonSmall {
+    width: 15vw;
+    min-height: 7vh;
+    margin: 1vh;
+}
+
+.menuButtonBig {
+    width: 20vw;
+    height: 20vh;
+    margin: 1vw;
+}
+
+.sessionOptions {
+    margin: 1vh;
+}
+
+.menuText {
+    margin: 1vh;
+}
+
+#sessionFound {
+    display: none;
+}
+
+#sessionNotFound {
+    display: none;
+}
+
+#m2 {
+    display: none;
+}
+
+#m3 {
+    display: none;
+}
+
+#m4_main {
+    display: none;
+}
+
+#m4_secondary {
+    display: none;
 }

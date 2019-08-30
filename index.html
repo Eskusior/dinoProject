@@ -7,23 +7,43 @@
 	<link rel="stylesheet" href="./css/styles.css"/>
 </head>
 <body>
-	<div class="session">
-		<span class="question">Besitzen Sie bereits eine Session?</span>
-		<button class="button decline" onclick="createNewSession()">Nein</button>
-		<button class="button accept" onclick="getOldSessionId()">Ja</button>
-	</div>
-	<div class="existingSession">
-		<span class="">Bitten geben Sie Ihre alte Session-ID an: </span>
-		<input type="number">
-		<button class="button decline" onclick="createNewSession()">Abbrechen</button>
-		<button class="button accept" onclick="loadSessionHighscore()">Ja</button>
-	</div>
-	<div class="getInputDevice">
-		<span class="">Ihre Session-ID ist: </span>
-		<span class="">Ihr Highscore beträgt: </span>
-		<span class="">Wie wollen Sie das Spiel spielen?</span>
-		<button class="button " onclick="setOneDevice()">An einem Gerät</button>
-		<button class="button " onclick="setTwoDevices()">An zwei Geräten</button>
+	<div id="menu">
+		<div id="m1">
+			<span class="menuHeadline">DinoProject</span><br/>
+			<button class="menuButtonSmall" onclick="setNewGame()">Neues Spiel</button><br/>
+			<button class="menuButtonSmall" onclick="useAsSecondaryDevice()">Als zweites Gerät benutzen</button><br/>
+			<div id="loadOldSession" class="sessionOptions">
+					<span class="menuText">Falls Sie bereits eine Session-ID haben, können Sie diese hier eingeben, um Ihren Highscore zu laden.</span><br/>
+					<input id="sessionIdInput" type="number"><button class="menuButtonSmall" onclick="setSessionID()">Bestätigen</button>
+			</div>
+			<div id="sessionFound">
+				<span>Session wurde gefunden. Sie können nun ein neues Spiel starten.</span><br/>
+				<span id="sessionIdSpan">Session-ID: </span><br/>
+				<span id="highscoreSpan">Highscore: </span>
+			</div>
+			<div id="sessionNotFound">
+				<span>Es konnte keine Session mit der angegebenen ID gefunden werden.<br/>Starten Sie ein neues Spiel, oder versuchen Sie es erneut.</span>
+				<button class="menuButtonSmall" onclick="resetToSessionInput()">Erneut versuchen</button>
+			</div>
+		</div>
+		<div id="m2">
+			<span class="menuHeadline">Steuerungsart</span><br/>
+			<button class="menuButtonBig" onclick="setOneDeviceControl()">1 Gerät</button>
+			<button class="menuButtonBig" onclick="setTwoDevicesControl()">2 Geräte</button>
+		</div>
+		<div id="m3">
+			<span class="menuHeadline">Welche Funktion soll dieses Gerät haben?</span><br/>
+			<button class="menuButtonBig" onclick="setDisplayFunction()">Anzeige</button>
+			<button class="menuButtonBig" onclick="setControlFunction()">Steuerung</button>
+		</div>
+		<div id="m4_main">
+			<span class="menuHeadline">Wie möchten Sie steuern?</span>
+			<button class="menuButtonBig">Kippsteuerung</button>
+			<button class="menuButtonBig">Tippsteuerung</button>
+		</div>
+		<div id="m4_secondary">
+			<span class="menuWaitingText">Bitte überprüfen Sie Ihr 2. Gerät.</span>
+		</div>
 	</div>
 <script src="./js/scripts.js"></script>
 <script src="./js/game.js"></script>

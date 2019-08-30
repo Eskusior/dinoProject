@@ -8,6 +8,16 @@ function startGame() {
     gameArea.start();
 }
 
+function vh(v) {
+	var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+	return (v * h) / 100;
+  }
+  
+  function vw(v) {
+	var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+	return (v * w) / 100;
+  }
+
 // Spielfeld
 var gameArea = {
     canvas: document.createElement("canvas"),
@@ -16,8 +26,8 @@ var gameArea = {
     start: function() {
 
         // Canvas initialisieren
-        this.canvas.width = 600;
-        this.canvas.height = 300;
+        this.canvas.width = vw(50);
+        this.canvas.height = vh(50);
         this.context = this.canvas.getContext("2d");
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
 
