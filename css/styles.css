@@ -41,26 +41,6 @@ canvas {
     margin: 1vh;
 }
 
-#sessionFound {
-    display: none;
-}
-
-#sessionNotFound {
-    display: none;
-}
-
-#m2 {
-    display: none;
-}
-
-#m3 {
-    display: none;
-}
-
-#m4_main {
-    display: none;
-}
-
-#m4_secondary {
+#impressum {
     display: none;
 }

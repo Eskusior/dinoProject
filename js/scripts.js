@@ -1,42 +1,89 @@
 // Variablen
-var sessionID = 0; // ID der derzeitigen Session --> 0 bei neuem Spiel, bis erster Score in DB
-var highscore = 0; // Highscore der Session
-var socketID = 0; // ID für Socketverbindung
-var controlType = ""; // Typ der Steuerung - 1 oder 2 Geräte ("oneD", "twoD")
-var deviceUsage = ""; // Bei 2 Geräten -> Nutzen des Gerätes ("display", "control")
-var inputType = "" // Wie wird gesteuert ?
+
 
 // Verweise auf HTML Elemente zum ein-/ausblenden
-var menu1 = document.getElementById("m1");
-var menu2 = document.getElementById("m2");
-var menu3 = document.getElementById("m3");
-var menu4_main = document.getElementById("m4_main");
-var menu4_secondary = document.getElementById("m4_secondary");
-var sessionFoundDiv = document.getElementById("sessionFound");
-var noSessionFoundDiv = document.getElementById("sessionNotFound");
-var loadOldSessionDiv = document.getElementById("loadOldSession");
-var sessionIdInput = document.getElementById("sessionIdInput");
-var sessionIdSpan = document.getElementById("sessionIdSpan");
-var highscoreSpan = document.getElementById("highscoreSpan");
+var mainMenu = document.getElementById("mainMenu");
+var impressum = document.getElementById("impressum");
 
+// Webservice BaseURL
+//var baseURL = 'http://webengineering.ins.hs-anhalt.de:32193/session';
+var baseURL = 'http://localhost:4000';
 
-var Http = new XMLHttpRequest();
-var baseURL = 'webengineering.ins.hs-anhalt.de:32193/session';
-
+// Neues Spiel Klick --> Wechsel zu Menü 2
 function setNewGame() {
-
-    menu1.style.display = "none";
-    menu2.style.display = "block";
+    var url = baseURL + '/test';
+    console.log("test");
+    fetchJSON(url, 'POST');
 
 }
 
+
+async function fetchJSON(url, method) {
+    const res = await fetch(url, {
+        method: method
+    });
+    return res.json();
+}
+
+function goToImpressum() {
+    mainMenu.style.display = "none";
+    impressum.style.display = "block";
+}
+
+function goBackToMainMenu() {
+    impressum.style.display = "none";
+    mainMenu.style.display = "block";
+}
+
+// Register ServiceWorker
+/*
+window.addEventListener('load', e => {
+    //new PWAConfApp();
+    registerSW();
+});
+
+async function registerSW() {
+    if('serviceWorker' in navigator) {
+        try {
+            await navigator.serviceWorker.register('./service-worker.js');
+        } catch(e) {
+            alert('ServiceWorker registration failed. Sorry about that.');
+        }
+    } 
+}
+*/
+
+
+// Alte Session finden mit Value aus Input
 function setSessionID() {
     let currSessionInput = sessionIdInput.value;
 
     if(currSessionInput === "") {
-        sessionIdInput.style.color = "red";
+        sessionIdInput.style.border = "1px solid red"; // Feld leer
     } else {
         sessionID = currSessionInput;
+
+        // GET auf Backend mit ID
+        fetch(baseURL + '/' + sessionID).then(response => {
+                return response.json();
+        }).then(json => {
+                
+            // Wenn Session nicht gefunden
+            if(json.statuscode) {
+                sessionID = 0;
+                loadOldSessionDiv.style.display = 'none';
+                noSessionFoundDiv.style.display = 'block';
+            }
+            // Ansonsten 
+            else {
+                sessionIdSpan.innerHTML = "Session-ID: " + JSON.stringify(json.id);
+                highscoreSpan.innerHTML = "Highscore: " + JSON.stringify(json.highscore);
+                loadOldSessionDiv.style.display = 'none';
+                sessionFoundDiv.style.display = 'block';
+            }
+
+
+        });
+
     }
 }
-
