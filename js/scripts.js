@@ -1,35 +1,62 @@
 // Variablen
-
+var sessionID = "";
 
 // Verweise auf HTML Elemente zum ein-/ausblenden
 var mainMenu = document.getElementById("mainMenu");
 var impressum = document.getElementById("impressum");
+var menu = document.getElementById('menu');
 
 // Webservice BaseURL
 //var baseURL = 'http://webengineering.ins.hs-anhalt.de:32193/session';
 var baseURL = 'http://localhost:4000';
 
-// Neues Spiel Klick --> Wechsel zu Menü 2
+// Neues Spiel Klick --> Session erstellen und Redirect
 function setNewGame() {
-    var url = baseURL + '/view';
-    console.log("test");
-    fetchJSON(url, 'POST');
-
+    var url = baseURL + '/game';
+    createNewSession(url);
 }
 
+// session aus URL auslesen, falls vorhanden
+function getQueryParams() {
+    var sID = window.location.pathname.substr(6);
+    
+    // Wenn SessionID vorhanden --> Spiel starten
+    if(sID != '') {
+        sessionID = sID;
+        initializeGame();
+    }
+}
 
+// Menü ausblenden und Spiel starten
+function initializeGame() {
+    menu.style.display = 'none';
+    startGame();
+}
+
+// Neue Session anlegen
+async function createNewSession(url) {
+    const res = await fetch(url, {
+        method: 'POST'
+    });
+    window.location.replace(res.url)
+}
+
+// HTTP Call auf URL und Rückgabe als JSON
 async function fetchJSON(url, method) {
     const res = await fetch(url, {
         method: method
     });
+    console.log("test");
     return res.json();
 }
 
+// Klick auf Impressum
 function goToImpressum() {
     mainMenu.style.display = "none";
     impressum.style.display = "block";
 }
 
+// Zurück zum Hauptmenü
 function goBackToMainMenu() {
     impressum.style.display = "none";
     mainMenu.style.display = "block";
@@ -52,38 +79,3 @@ async function registerSW() {
     } 
 }
 */
-
-
-// Alte Session finden mit Value aus Input
-function setSessionID() {
-    let currSessionInput = sessionIdInput.value;
-
-    if(currSessionInput === "") {
-        sessionIdInput.style.border = "1px solid red"; // Feld leer
-    } else {
-        sessionID = currSessionInput;
-
-        // GET auf Backend mit ID
-        fetch(baseURL + '/' + sessionID).then(response => {
-                return response.json();
-        }).then(json => {
-                
-            // Wenn Session nicht gefunden
-            if(json.statuscode) {
-                sessionID = 0;
-                loadOldSessionDiv.style.display = 'none';
-                noSessionFoundDiv.style.display = 'block';
-            }
-            // Ansonsten 
-            else {
-                sessionIdSpan.innerHTML = "Session-ID: " + JSON.stringify(json.id);
-                highscoreSpan.innerHTML = "Highscore: " + JSON.stringify(json.highscore);
-                loadOldSessionDiv.style.display = 'none';
-                sessionFoundDiv.style.display = 'block';
-            }
-
-
-        });
-
-    }
-}
