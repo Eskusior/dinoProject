@@ -11,7 +11,7 @@ var baseURL = 'http://localhost:4000';
 
 // Neues Spiel Klick --> Wechsel zu Menü 2
 function setNewGame() {
-    var url = baseURL + '/test';
+    var url = baseURL + '/view';
     console.log("test");
     fetchJSON(url, 'POST');
 
