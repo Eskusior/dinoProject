@@ -3,8 +3,13 @@ var obstacles = []; // Feld für Hindernisse
 
 var multiplier = 1; // Multiplier für Score und Hindernisgeschwindigkeit
 
+var isController = false; // Ist Spieler der, der Steuert
+
 // Spiel starten
-function startGame() {
+function startGame(control) {
+
+	isController = control;
+
     gameArea.start();
 }
 
@@ -31,15 +36,17 @@ var gameArea = {
         this.context = this.canvas.getContext("2d");
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
 
-        // Steuerung laden
-        window.addEventListener("keydown", controller.keyListener);
-        window.addEventListener("keyup", controller.keyListener);
-
-        // Multiplier starten
-        window.setInterval(addOverTime, 5000);
-
-        // Spiel starten
-        window.requestAnimationFrame(loop);
+		if (isController) {
+			// Steuerung laden
+			window.addEventListener("keydown", controller.keyListener);
+			window.addEventListener("keyup", controller.keyListener);
+			// Multiplier starten
+			window.setInterval(addOverTime, 5000);
+	
+			// Spiel starten
+			window.requestAnimationFrame(loop);
+		}
+        
         
     }
 }
@@ -207,6 +214,55 @@ function spawnRandomObstacle() {
     }
 }
 
+function buildWsMessage() {
+	let canvasData = {
+		"player": player,
+		"obstacles": obstacles,
+		"score": scoreText,
+		"multiplier": multiplier
+	}
+
+	sendNewMessage(canvasData, "update");
+}
+
+function updateCanvas(data) {
+	player = data.player;
+	obstacles = data.obstacles;
+	score = data.score;
+	multiplier = data.multiplier;
+
+	drawUpdates();
+}
+
+function drawUpdates() {
+	let ctx = gameArea.context; // Kontext zum Spielfeld
+	// Komponenten aktualisieren
+	ctx.fillStyle = "#202020";
+	ctx.fillRect(0, 0, 600, 300);// x, y, width, height
+	
+	// Player 
+	ctx.fillStyle = player.color;
+	ctx.fillRect(player.x, player.y, player.width, player.height);
+
+	// Score
+	ctx.font = score.fontSize + " " + score.fontStyle;
+	ctx.fillStyle = score.color;
+	ctx.fillText(score.text, score.x, score.y);
+
+
+	for(i = 0; i < obstacles.length; i += 1) {
+		ctx.fillStyle = obstacles[i].color;
+		ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height);
+	}
+
+    ctx.strokeStyle = "#202830";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(0, 250);
+    ctx.lineTo(600, 250);
+    ctx.stroke();
+}
+
 // Spielfluss
 loop = function() {
 
@@ -285,4 +341,6 @@ loop = function() {
         window.requestAnimationFrame(loop);
 	}
 
+	buildWsMessage();
+	
 }

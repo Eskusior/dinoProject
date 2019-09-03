@@ -7,8 +7,8 @@ var impressum = document.getElementById("impressum");
 var menu = document.getElementById('menu');
 
 // Webservice BaseURL
-//var baseURL = 'http://webengineering.ins.hs-anhalt.de:32193/session';
-var baseURL = 'http://localhost:4000';
+var baseURL = 'http://webengineering.ins.hs-anhalt.de:32193';
+//var baseURL = 'http://localhost:4000';
 
 // Neues Spiel Klick --> Session erstellen und Redirect
 function setNewGame() {
