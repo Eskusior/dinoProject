@@ -3,6 +3,7 @@ canvas {
     background-color: #f1f1f1;
     width: 50vw;
     height: 50vh;
+    margin: auto;
 }
 
 #menu {
@@ -13,6 +14,7 @@ canvas {
     margin: auto;
     font-size: 14px;
     padding: 5px;
+    position: relative;
 }
 
 .menuHeadline {
@@ -43,4 +45,22 @@ canvas {
 
 #impressum {
     display: none;
+}
+
+#restartButton {
+    display: none;
+    z-index: 100;
+}
+
+#controlRightsButton {
+    display: none;
+}
+
+.canvasButton {
+    width: 20vw;
+    height: 20vh;
+    margin: auto;
+    margin-top: -35vh;
+    margin-left: 15vw;
+    position: absolute;
 }

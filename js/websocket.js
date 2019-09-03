@@ -61,13 +61,13 @@ function createWebSocketConnection(sessionID) {
 
 }
 
-
-function sendNewMessage(data, type) {
+// Bild übertragen
+function sendCanvasData(data) {
     let message = {
         "action": "update",
         "sessionID": sID,
         "canvasData": data
     }
-    console.log(message);
+
     websocket.send(JSON.stringify(message));
 }

@@ -5,12 +5,20 @@ var multiplier = 1; // Multiplier für Score und Hindernisgeschwindigkeit
 
 var isController = false; // Ist Spieler der, der Steuert
 
+var frameNo = 0; // Anzahl der Frames
+
+var newSessionObject; // Objekt zum Speichern des Ausgangszustandes
+
+var restartButton = document.getElementById("restartButton");
+var controlRightsButton = document.getElementById("controlRightsButton");
+var menu = document.getElementById('menu');
+
 // Spiel starten
 function startGame(control) {
 
-	isController = control;
+	isController = control; // Spieler oder Zuschauer
 
-    gameArea.start();
+    gameArea.start(); 
 }
 
 function vh(v) {
@@ -34,7 +42,12 @@ var gameArea = {
         this.canvas.width = vw(50);
         this.canvas.height = vh(50);
         this.context = this.canvas.getContext("2d");
-        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+		menu.insertBefore(this.canvas, menu.childNodes[0]);
+		
+		newSessionObject = {
+			player: JSON.parse(JSON.stringify(player)),
+			scoreText: JSON.parse(JSON.stringify(scoreText))
+		}
 
 		if (isController) {
 			// Steuerung laden
@@ -48,7 +61,18 @@ var gameArea = {
 		}
         
         
-    }
+	},
+	// Spiel neustarten
+	restart: function() {
+		player = JSON.parse(JSON.stringify(newSessionObject.player));
+		obstacles = [];
+		scoreText = JSON.parse(JSON.stringify(newSessionObject.scoreText));;
+		multiplier = 1;
+		frameNo = 0;
+
+		//window.setInterval(addOverTime, 5000);
+		window.requestAnimationFrame(loop);
+	}
 }
 
 // Spieler
@@ -61,13 +85,7 @@ var player = {
 	jumping: false,
 	crouching: false,
 	color: "green",
-    dead: false,
-    // Spieler auf Canvas zeichen
-	draw: function() {
-		ctx = gameArea.context;
-		ctx.fillStyle = this.color;
-		ctx.fillRect(this.x, this.y, this.width, this.height);
-	}
+    dead: false
 
 }
 
@@ -94,11 +112,6 @@ function Obstacle(x, type, pos) {
 	this.height = type === 'cactus' ? 40 : 20;
 	this.speedX = 0,
 	this.color = type === 'cactus' ? 'green' : 'gray';
-	this.draw = function() {
-		ctx = gameArea.context;
-		ctx.fillStyle = this.color;
-		ctx.fillRect(this.x, this.y, this.width, this.height);
-    }
     
     // Überprüfung auf Kollision mit Spieler
 	this.wasHit = function(playerObj) {
@@ -127,18 +140,12 @@ function Obstacle(x, type, pos) {
 
 // ScoreText
 var scoreText = {
-	x: 300,
+	x: vw(1),
 	y: 40,
 	points: 0,
-	fontSize: "30px",
+	fontSize: "24px",
 	fontStyle: "Consolas",
-	color: "white",
-	draw: function() {
-		ctx = gameArea.context;
-		ctx.font = this.fontSize + " " + this.fontStyle;
-		ctx.fillStyle = this.color;
-		ctx.fillText(this.text, this.x, this.y);
-	}
+	color: "white"
 }
 
 // Controller für Eingaben
@@ -167,7 +174,7 @@ var controller = {
 
 // Auf bestimmtes Interval prüfen, für Spawnen neuer Hindernisse
 function everyInterval(n) {
-	if ((scoreText.points / n) % 1 == 0) {
+	if ((frameNo / n) % 1 == 0) {
 		return true;
 	}
 
@@ -214,6 +221,7 @@ function spawnRandomObstacle() {
     }
 }
 
+// Nachricht für Websocket erstellen
 function buildWsMessage() {
 	let canvasData = {
 		"player": player,
@@ -222,34 +230,37 @@ function buildWsMessage() {
 		"multiplier": multiplier
 	}
 
-	sendNewMessage(canvasData, "update");
+	sendCanvasData(canvasData); // An WS schicken
 }
 
+// Canvas mit empfangenen Daten updaten
 function updateCanvas(data) {
 	player = data.player;
 	obstacles = data.obstacles;
-	score = data.score;
+	scoreText = data.score;
 	multiplier = data.multiplier;
 
 	drawUpdates();
 }
 
+// Canvas aktualisieren
 function drawUpdates() {
 	let ctx = gameArea.context; // Kontext zum Spielfeld
+
 	// Komponenten aktualisieren
 	ctx.fillStyle = "#202020";
-	ctx.fillRect(0, 0, 600, 300);// x, y, width, height
+	ctx.fillRect(0, 0, vw(50), vh(50));// x, y, width, height
 	
 	// Player 
 	ctx.fillStyle = player.color;
 	ctx.fillRect(player.x, player.y, player.width, player.height);
 
 	// Score
-	ctx.font = score.fontSize + " " + score.fontStyle;
-	ctx.fillStyle = score.color;
-	ctx.fillText(score.text, score.x, score.y);
+	ctx.font = scoreText.fontSize + " " + scoreText.fontStyle;
+	ctx.fillStyle = scoreText.color;
+	ctx.fillText(scoreText.text, scoreText.x, scoreText.y);
 
-
+	// Obstacles
 	for(i = 0; i < obstacles.length; i += 1) {
 		ctx.fillStyle = obstacles[i].color;
 		ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height);
@@ -259,7 +270,7 @@ function drawUpdates() {
     ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.moveTo(0, 250);
-    ctx.lineTo(600, 250);
+    ctx.lineTo(vw(50), 250);
     ctx.stroke();
 }
 
@@ -298,49 +309,49 @@ loop = function() {
 		player.speedY = 0;
 	}
 
-    let ctx = gameArea.context; // Kontext zum Spielfeld
-
     // Score erhöhen
 	scoreText.points = Math.floor(scoreText.points + (1 * multiplier));
 	scoreText.text = "SCORE: " + scoreText.points;
+	frameNo += 1;
 
     // Neues Hindernis alle 200 Frames
-	if(scoreText == 10 || everyInterval(200)) {
+	if(frameNo == 1000 || everyInterval(500)) {
 		spawnRandomObstacle();
 	}
 
-	// Komponenten aktualisieren
-	ctx.fillStyle = "#202020";
-    ctx.fillRect(0, 0, 600, 300);// x, y, width, height
-	player.draw();
-	scoreText.draw();
-
-
+	// Hindernisse bewegen
 	for(i = 0; i < obstacles.length; i += 1) {
 		obstacles[i].x -= (2 * multiplier);
-		obstacles[i].draw();
 	}
 
-    ctx.strokeStyle = "#202830";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(0, 250);
-    ctx.lineTo(600, 250);
-    ctx.stroke();
+	drawUpdates();
 
     // Hitüberprüfung
     for (i = 0; i < obstacles.length; i+= 1) {
 		if(obstacles[i].wasHit(player)) {
 			player.dead = true;
+			restartButton.style.display = "block";
 			return;
 		}
     }
 
 	// Wenn Spieler Tod --> keine Aktualisierung mehr
 	if(player.dead == false) {
-        window.requestAnimationFrame(loop);
+		window.requestAnimationFrame(loop);
 	}
-
-	buildWsMessage();
 	
 }
+
+// Spiel neustarten
+function restartGame() {
+
+	restartButton.style.display = "none";
+	gameArea.restart();
+}
+
+// Wenn Spieler --> 60mal pro Sekunde Bild übertragen
+setInterval(function() {
+	if(isController && player.dead == false){
+		buildWsMessage();
+	}
+}, 1000/60);

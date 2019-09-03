@@ -29,7 +29,8 @@ function getQueryParams() {
 
 // Menü ausblenden und Spiel starten
 function initializeGame(sessionID) {
-    menu.style.display = 'none';
+    mainMenu.style.display = 'none';
+    impressum.style.display = 'none';
     createWebSocketConnection(sessionID);
 }
 
@@ -42,11 +43,19 @@ async function createNewSession(url) {
 }
 
 // HTTP Call auf URL und Rückgabe als JSON
-async function fetchJSON(url, method) {
-    const res = await fetch(url, {
-        method: method
-    });
-    console.log("test");
+async function fetchJSON(url, method, body = null) {
+    let res;
+    if(body != null) {
+        res = await fetch(url, {
+            method: method,
+            body: JSON.stringify(body)
+        });
+    } else {
+        res = await fetch(url, {
+            method: method
+        });
+    }
+ 
     return res.json();
 }
 
@@ -60,6 +69,34 @@ function goToImpressum() {
 function goBackToMainMenu() {
     impressum.style.display = "none";
     mainMenu.style.display = "block";
+}
+
+// Highscore holen, falls vorhanden
+function getExistingHighscore() {
+    let url = baseURL + "/highscore/" + sessionID
+    let res = fetchJSON(url, "GET");
+
+    if(res.highscore){
+        return res.highscore;
+    }
+
+    return 0;
+}
+
+// Highscore an DB schicken
+function sendHighscoreToDB(highscore, isNew) {
+    let url = baseURL + '/highscore';
+
+    let body = {
+        sessionID: sessionID,
+        highscore: highscore
+    }
+
+    if(!isNew) {
+        url += '/' + sessionID;
+    }
+
+    let res = fetchJSON(url, "POST", body);
 }
 
 // Register ServiceWorker
