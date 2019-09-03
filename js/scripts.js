@@ -23,14 +23,14 @@ function getQueryParams() {
     // Wenn SessionID vorhanden --> Spiel starten
     if(sID != '') {
         sessionID = sID;
-        initializeGame();
+        initializeGame(sessionID);
     }
 }
 
 // Menü ausblenden und Spiel starten
-function initializeGame() {
+function initializeGame(sessionID) {
     menu.style.display = 'none';
-    startGame();
+    createWebSocketConnection(sessionID);
 }
 
 // Neue Session anlegen
