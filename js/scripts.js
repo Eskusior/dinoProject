@@ -48,6 +48,9 @@ async function fetchJSON(url, method, body = null) {
     if(body != null) {
         res = await fetch(url, {
             method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify(body)
         });
     } else {
@@ -56,7 +59,8 @@ async function fetchJSON(url, method, body = null) {
         });
     }
  
-    return res.json();
+    let json = await res.json();
+    return json;
 }
 
 // Klick auf Impressum
@@ -72,31 +76,27 @@ function goBackToMainMenu() {
 }
 
 // Highscore holen, falls vorhanden
-function getExistingHighscore() {
+async function getExistingHighscore() {
     let url = baseURL + "/highscore/" + sessionID
-    let res = fetchJSON(url, "GET");
-
-    if(res.highscore){
-        return res.highscore;
-    }
-
-    return 0;
+    fetchJSON(url, "GET").then(res => {
+        if(res.highscore){
+            setHighscore(res.highscore);
+        }
+    });
+    setHighscore(0);
 }
 
 // Highscore an DB schicken
-function sendHighscoreToDB(highscore, isNew) {
-    let url = baseURL + '/highscore';
-
+async function sendHighscoreToDB(highscore) {
+    let url = baseURL + '/highscore/' + sessionID;
     let body = {
-        sessionID: sessionID,
-        highscore: highscore
+        "sessionID": sessionID,
+        "highscore": highscore
     }
 
-    if(!isNew) {
-        url += '/' + sessionID;
-    }
+    fetchJSON(url, "POST", body);
 
-    let res = fetchJSON(url, "POST", body);
+    
 }
 
 // Register ServiceWorker

@@ -1,8 +1,6 @@
 canvas {
 	border:1px solid #d3d3d3;
     background-color: #f1f1f1;
-    /*width: 50vw;
-    height: 50vh;*/
     margin: auto;
 }
 
@@ -101,7 +99,7 @@ canvas {
     border-radius: 20px;
 }
 
-/*Responsiv*/
+/*Responsiv Mobil*/
 @media only screen and (max-width: 812px) {
     
     body {

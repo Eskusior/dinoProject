@@ -9,7 +9,7 @@ var existingPlayer = true; // Gibt es einen Spieler
 
 var frameNo = 0; // Anzahl der Frames
 
-var maxWidth = 50;
+var maxWidth = 50; // Größe des Canvas
 var maxHeight = 50;
 
 var newSessionObject; // Objekt zum Speichern des Ausgangszustandes
@@ -73,6 +73,10 @@ var gameArea = {
         this.canvas.height = vh(maxHeight);
         this.context = this.canvas.getContext("2d");
 		menu.insertBefore(this.canvas, menu.childNodes[0]);
+
+		// Highscore für Session holen
+		getExistingHighscore();
+		
 		
 		// Initiale Daten speichern
 		newSessionObject = {
@@ -100,16 +104,78 @@ var gameArea = {
 	}
 }
 
+function setHighscore(points) {
+	highscoreText.points = points;
+	highscoreText.text = "HIGHSCORE: " + highscoreText.points;
+}
+
 // Steuerungsoptionen setzten
 function setControllerOptions() {
 	// Steuerung laden
-	window.addEventListener("keydown", controller.keyListener);
-	window.addEventListener("keyup", controller.keyListener);
+	setInputListeners();
 	// Multiplier starten
 	window.setInterval(addOverTime, 5000);
 
 	// Spiel starten
 	window.requestAnimationFrame(loop);
+}
+
+function setInputListeners() {
+	// Tastatureingabe
+	window.addEventListener("keydown", keyboardInput);
+	window.addEventListener("keyup", keyboardInput);
+
+	// Mauseingabe
+	window.addEventListener("mousedown", mouseInput);
+	window.addEventListener("mouseup", mouseInput);
+
+	// Toucheingabe
+	window.addEventListener("touchstart", touchInput);
+	window.addEventListener("touchend", touchInput);
+
+	// Motioneingabe
+	window.addEventListener("devicemotion", motionInput);
+
+}
+
+// Tastatureingabe
+function keyboardInput(event) {
+	var key_state = (event.type == "keydown") ? true : false;
+
+		switch(event.keyCode) {
+
+			// up
+			case 38: 
+				controller.up = key_state;
+				break;
+			// down
+			case 40:
+				controller.down = key_state;
+				break;
+
+		}
+}
+
+// Mauseingabe
+function mouseInput(event) {
+	var key_state = (event.type == "mousedown") ? true : false;
+
+	controller.up = key_state;
+}
+
+// Toucheingabe
+function touchInput(event) {
+	var key_state = (event.type == "touchstart") ? true : false;
+
+	controller.up = key_state;
+}
+
+// Motioneingabe
+function motionInput(event) {
+	var key_state = (event.type == "mousedown") ? true : false;
+
+	controller.up = key_state;
+
 }
 
 // Spieler
@@ -185,28 +251,20 @@ var scoreText = {
 	color: "white"
 }
 
+// Highscore
+var highscoreText = {
+	x: vw(1),
+	y: vh(maxHeight - 2),
+	points: 0,
+	fontSize: "24px",
+	fontStyle: "Consolas",
+	color: "white"
+}
+
 // Controller für Eingaben
 var controller = {
 	up: false,
-	down: false,
-	keyListener: function(event){
-
-		var key_state = (event.type == "keydown") ? true : false;
-
-		switch(event.keyCode) {
-
-			// up
-			case 38: 
-				controller.up = key_state;
-				break;
-			// down
-			case 40:
-				controller.down = key_state;
-				break;
-
-		}
-
-	}
+	down: false
 }
 
 // Auf bestimmtes Interval prüfen, für Spawnen neuer Hindernisse
@@ -218,7 +276,7 @@ function everyInterval(n) {
 	return false;
 }
 
-// Multiplier über zeit erhöhen bis 10
+// Multiplier über Zeit erhöhen bis 10
 addOverTime = function() {
 
     multiplier =  Math.round((multiplier + 0.1) * 10) / 10; // Runden auf 1 Nachkommastelle
@@ -305,6 +363,11 @@ function drawUpdates() {
 	ctx.fillStyle = scoreText.color;
 	ctx.fillText(scoreText.text, scoreText.x, scoreText.y);
 
+	// Highscore
+	ctx.font = highscoreText.fontSize + " " + highscoreText.fontStyle;
+	ctx.fillStyle = highscoreText.color;
+	ctx.fillText(highscoreText.text, highscoreText.x, highscoreText.y);
+	
 	// Obstacles
 	for(i = 0; i < obstacles.length; i += 1) {
 		ctx.fillStyle = obstacles[i].color;
@@ -368,13 +431,15 @@ loop = function() {
 		player.speedY = 0;
 	}
 
+	//highscoreText.text = "HIGHSCORE: " + highscoreText.points;
+
     // Score erhöhen
 	scoreText.points = Math.floor(scoreText.points + (1 * multiplier));
 	scoreText.text = "SCORE: " + scoreText.points;
 	frameNo += 1;
 
-    // Neues Hindernis alle 200 Frames
-	if(frameNo == 1000 || everyInterval(500)) {
+    // Neues Hindernis alle 300 Frames
+	if(frameNo == 1 || everyInterval(300)) {
 		spawnRandomObstacle();
 	}
 
@@ -389,6 +454,14 @@ loop = function() {
     for (i = 0; i < obstacles.length; i+= 1) {
 		if(wasHit(obstacles[i], player)) {
 			player.dead = true;
+
+			// Wenn Score größer als Higscore ist übertragen
+			if(scoreText.points > highscoreText.points) {
+				highscoreText.points = scoreText.points;
+				highscoreText.text = "HIGHSCORE: " + highscoreText.points;
+				sendHighscoreToDB(scoreText.points);
+			}
+
 			restartButton.style.display = "block";
 			return;
 		}
