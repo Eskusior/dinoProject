@@ -39,6 +39,12 @@ function createWebSocketConnection(sessionID) {
                     updateCanvas(message.message);
                 }
                 break;
+            case "beController":
+                wantToBeController();
+                break;
+            case "isNewController":
+                setControlRights();
+                break;
         }
 
     };
@@ -56,7 +62,7 @@ function createWebSocketConnection(sessionID) {
             canControl: canControl
         };
 
-        ws.send(JSON.stringify(message));
+        //ws.send(JSON.stringify(message));
     }
 
 }
@@ -69,5 +75,15 @@ function sendCanvasData(data) {
         "canvasData": data
     }
 
+    websocket.send(JSON.stringify(message));
+}
+
+// Steuerung übernehmen an Backend
+function sendControlWish() {
+    let message = {
+        "action" : "setControl",
+        "sessionID": sID
+    }
+    console.log("controlWish send");
     websocket.send(JSON.stringify(message));
 }

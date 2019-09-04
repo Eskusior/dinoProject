@@ -5,7 +5,12 @@ var multiplier = 1; // Multiplier für Score und Hindernisgeschwindigkeit
 
 var isController = false; // Ist Spieler der, der Steuert
 
+var existingPlayer = true; // Gibt es einen Spieler
+
 var frameNo = 0; // Anzahl der Frames
+
+var maxWidth = 50;
+var maxHeight = 50;
 
 var newSessionObject; // Objekt zum Speichern des Ausgangszustandes
 
@@ -17,19 +22,44 @@ var menu = document.getElementById('menu');
 function startGame(control) {
 
 	isController = control; // Spieler oder Zuschauer
+	
+	// Bei mobilen Endgeräten Optionen laden
+	if(isMobile()) {
+		addMobileOptions();
+	}
 
     gameArea.start(); 
 }
 
+// Prüft, ob das benutzte Gerät kein Desktop-PC ist
+function isMobile() {
+
+	if(typeof window.orientation !== 'undefined') {
+		return true;
+	}
+
+	return false;
+}
+
+// Zusätzliche Optionen für Mobil laden
+function addMobileOptions() {
+	screen.orientation.lock('landscape');
+
+	maxWidth = 100;
+	maxHeight = 100;
+}
+
+// Viewport Height berechnen
 function vh(v) {
 	var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 	return (v * h) / 100;
   }
-  
-  function vw(v) {
+
+// Viewport Width berechnen
+function vw(v) {
 	var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
 	return (v * w) / 100;
-  }
+}
 
 // Spielfeld
 var gameArea = {
@@ -39,25 +69,20 @@ var gameArea = {
     start: function() {
 
         // Canvas initialisieren
-        this.canvas.width = vw(50);
-        this.canvas.height = vh(50);
+        this.canvas.width = vw(maxWidth);
+        this.canvas.height = vh(maxHeight);
         this.context = this.canvas.getContext("2d");
 		menu.insertBefore(this.canvas, menu.childNodes[0]);
 		
+		// Initiale Daten speichern
 		newSessionObject = {
 			player: JSON.parse(JSON.stringify(player)),
 			scoreText: JSON.parse(JSON.stringify(scoreText))
 		}
 
+		// Wenn aufrufende Person Spieler ist
 		if (isController) {
-			// Steuerung laden
-			window.addEventListener("keydown", controller.keyListener);
-			window.addEventListener("keyup", controller.keyListener);
-			// Multiplier starten
-			window.setInterval(addOverTime, 5000);
-	
-			// Spiel starten
-			window.requestAnimationFrame(loop);
+			setControllerOptions();
 		}
         
         
@@ -75,6 +100,18 @@ var gameArea = {
 	}
 }
 
+// Steuerungsoptionen setzten
+function setControllerOptions() {
+	// Steuerung laden
+	window.addEventListener("keydown", controller.keyListener);
+	window.addEventListener("keyup", controller.keyListener);
+	// Multiplier starten
+	window.setInterval(addOverTime, 5000);
+
+	// Spiel starten
+	window.requestAnimationFrame(loop);
+}
+
 // Spieler
 var player = {
 	x: 50,
@@ -84,7 +121,7 @@ var player = {
 	speedY: 0,
 	jumping: false,
 	crouching: false,
-	color: "green",
+	color: "#34eb8f",
     dead: false
 
 }
@@ -112,30 +149,30 @@ function Obstacle(x, type, pos) {
 	this.height = type === 'cactus' ? 40 : 20;
 	this.speedX = 0,
 	this.color = type === 'cactus' ? 'green' : 'gray';
-    
-    // Überprüfung auf Kollision mit Spieler
-	this.wasHit = function(playerObj) {
-		var ownLeft = this.x;
-		var ownRight = this.x + (this.width);
-		var ownTop = this.y;
-		var ownBottom = this.y + (this.height);
 
-		// Position des Kollisionsobjektes
-		var playerObjLeft = playerObj.x;
-		var playerObjRight = playerObj.x + (playerObj.width);
-		var playerObjTop = playerObj.y;
-		var playerObjBottom = playerObj.y + (playerObj.height);
+}
 
-		var crashed = true;
+// Hitüberprüfung
+function wasHit(obstacle, player ) {
+	var ownLeft = obstacle.x;
+	var ownRight = obstacle.x + (obstacle.width);
+	var ownTop = obstacle.y;
+	var ownBottom = obstacle.y + (obstacle.height);
 
-		// Wenn keine Überlagerung --> kein Crash
-		if((ownLeft > playerObjRight) || (ownRight < playerObjLeft) || (ownTop > playerObjBottom) || (ownBottom < playerObjTop)) {
-			crashed = false;
-		}
+	// Position des Kollisionsobjektes
+	var playerObjLeft = player.x;
+	var playerObjRight = player.x + (player.width);
+	var playerObjTop = player.y;
+	var playerObjBottom = player.y + (player.height);
 
-		return crashed;
+	var crashed = true;
+
+	// Wenn keine Überlagerung --> kein Crash
+	if((ownLeft > playerObjRight) || (ownRight < playerObjLeft) || (ownTop > playerObjBottom) || (ownBottom < playerObjTop)) {
+		crashed = false;
 	}
 
+	return crashed;
 }
 
 // ScoreText
@@ -227,7 +264,8 @@ function buildWsMessage() {
 		"player": player,
 		"obstacles": obstacles,
 		"score": scoreText,
-		"multiplier": multiplier
+		"multiplier": multiplier,
+		"frameNo": frameNo
 	}
 
 	sendCanvasData(canvasData); // An WS schicken
@@ -235,10 +273,17 @@ function buildWsMessage() {
 
 // Canvas mit empfangenen Daten updaten
 function updateCanvas(data) {
+
+	// Wenn ein anderer Spieler übernommen hat
+	if(!existingPlayer) {
+		existingPlayer = true;
+	}
+
 	player = data.player;
 	obstacles = data.obstacles;
 	scoreText = data.score;
 	multiplier = data.multiplier;
+	frameNo = data.frameNo;
 
 	drawUpdates();
 }
@@ -249,7 +294,7 @@ function drawUpdates() {
 
 	// Komponenten aktualisieren
 	ctx.fillStyle = "#202020";
-	ctx.fillRect(0, 0, vw(50), vh(50));// x, y, width, height
+	ctx.fillRect(0, 0, vw(maxWidth), vh(maxHeight));// x, y, width, height
 	
 	// Player 
 	ctx.fillStyle = player.color;
@@ -270,8 +315,22 @@ function drawUpdates() {
     ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.moveTo(0, 250);
-    ctx.lineTo(vw(50), 250);
+    ctx.lineTo(vw(maxWidth), 250);
     ctx.stroke();
+}
+
+// Bei Abbruch des Spielers Steuerungsanforderungsbutton einblenden
+function wantToBeController() {
+	controlRightsButton.style.display = "block";
+	existingPlayer = false;
+}
+
+// Wenn User neuer Spieler ist
+function setControlRights() {
+	controlRightsButton.style.display = "none";
+	isController = true;
+	clearInterval(sendCurrentCanvasData);
+	setControllerOptions();
 }
 
 // Spielfluss
@@ -284,17 +343,17 @@ loop = function() {
 	}
 
 	// Ducken
-	if(controller.down && player.crouching == false) {
-		player.height = 20;
-		player.y += 20;
-		player.crouching = true;
-	}
+	//if(controller.down && player.crouching == false) {
+	//	player.height = 20;
+	//	player.y += 20;
+	//	player.crouching = true;
+	//}
 
 	// Reset, falls Ducken gedrückt
-	if(player.height > 40){
-		player.height = 40;
-		player.crouching = false;
-	}
+	//if(player.height > 40){
+	//	player.height = 40;
+	//	player.crouching = false;
+	//}
 
 
 	// Gravitation
@@ -324,11 +383,11 @@ loop = function() {
 		obstacles[i].x -= (2 * multiplier);
 	}
 
-	drawUpdates();
+	drawUpdates(); // Canvas aktualisieren
 
     // Hitüberprüfung
     for (i = 0; i < obstacles.length; i+= 1) {
-		if(obstacles[i].wasHit(player)) {
+		if(wasHit(obstacles[i], player)) {
 			player.dead = true;
 			restartButton.style.display = "block";
 			return;
@@ -338,6 +397,7 @@ loop = function() {
 	// Wenn Spieler Tod --> keine Aktualisierung mehr
 	if(player.dead == false) {
 		window.requestAnimationFrame(loop);
+		//sendScoreToBackend();
 	}
 	
 }
@@ -350,7 +410,7 @@ function restartGame() {
 }
 
 // Wenn Spieler --> 60mal pro Sekunde Bild übertragen
-setInterval(function() {
+var sendCurrentCanvasData = setInterval(function() {
 	if(isController && player.dead == false){
 		buildWsMessage();
 	}

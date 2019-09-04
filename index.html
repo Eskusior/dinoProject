@@ -5,21 +5,22 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<title>DinoProject</title>
 	<link rel="stylesheet" type="text/css" href="/css/styles.css"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
 	<!--<link rel="manifest" href="/manifest.json"/>-->
 </head>
 <body onload="getQueryParams()">
 	<div id="menu">
 		<div id="mainMenu">
 			<span class="menuHeadline">DinoProject</span><br/>
-			<button class="menuButtonSmall" onclick="setNewGame()">Neues Spiel</button><br/>
-			<button class="menuButtonSmall" onclick="goToImpressum()">Impressum</button><br/>
+			<button class="button menuButton" onclick="setNewGame()">Neues Spiel</button><br/>
+			<button class="button menuButton" onclick="goToImpressum()">Impressum</button><br/>
 		</div>
 		<div id="impressum">
 			<span class="menuHeadline">DinoProject</span><br/>
-			<button class="menuButtonSmall" onclick="goBackToMainMenu()">Hauptmenü</button><br/>
+			<button class="button menuButton" onclick="goBackToMainMenu()">Hauptmenü</button><br/>
 		</div>
-		<button id="restartButton" onclick="restartGame()" class="canvasButton">Neustarten</button>
-		<button id="controlRightsButton" onclick="getControlRights()" class="canvasButton">Steuerung übernehmen?</button>
+		<button id="restartButton" onclick="restartGame()" class="button canvasButton">Neustarten</button>
+		<button id="controlRightsButton" onclick="sendControlWish()" class="button canvasButton">Steuerung übernehmen?</button>
 	</div>
 <script type="text/javascript" src="/js/scripts.js"></script>
 <script type="text/javascript" src="/js/websocket.js"></script>
