@@ -26,10 +26,16 @@ services:
      ports:
        - 32193:5002
 
+  websocket:
+     build: ./Websocket/
+     restart: always
+     ports:
+       - 32194:6789
+
   nginx:
      image: nginx
      volumes:
       - ./:/usr/share/nginx/html
       - ./NGINX/nginx.conf:/etc/nginx/nginx.conf
      ports:
-      - "8080:80"
+      - 32195:80
