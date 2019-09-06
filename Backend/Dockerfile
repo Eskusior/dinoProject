@@ -1,13 +1,10 @@
-FROM alpine:3.1
+FROM python:3
 
-# Update
-RUN apk add --update python py-pip
+# Add Script
+ADD server.py /
 
 # Install app dependencies
 RUN pip install flask flask-jsonpify flask-sqlalchemy flask-restful flask-cors mysql-connector-python
 
-# Bundle app source
-COPY server.py /src/server.py
-
 EXPOSE  5002
-CMD ["python", "/src/server.py", "-p 5002"]
+CMD ["python", "./server.py", "-p 5002"]

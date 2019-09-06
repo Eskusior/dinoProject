@@ -1,14 +1,10 @@
-FROM alpine:3.1
+FROM python:3
 
-# Update
-RUN apk add --update python py-pip
+# Add Script
+ADD wsServer.py /
 
 # Install app dependencies
-RUN pip install asyncio json logging websockets time
-
-# Bundle app source
-COPY wsServer.py /src/wsServer.py
+RUN pip install pathlib websockets
 
 EXPOSE  6789
-CMD ["python", "/src/wsServer.py", "-p 6789"]
-
+CMD ["python", "./wsServer.py"]

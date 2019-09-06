@@ -7,7 +7,7 @@ var startTime = new Date().getTime();
 // Websocketverbindung erstellen
 function createWebSocketConnection(sessionID) {
 
-    var ws = new WebSocket('ws://127.0.0.1:6789/');
+    var ws = new WebSocket('ws://webengineering.ins.hs-anhalt.de:32194/');
     websocket = ws;
     sID = sessionID;
     var canControl = false;
