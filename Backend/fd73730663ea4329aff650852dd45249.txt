@@ -1,0 +1,8 @@
+Offset: 1 ms
+Offset: 1 ms
+Offset: 1 ms
+Offset: 2 ms
+Offset: 1 ms
+Offset: 2 ms
+Offset: 1 ms
+Durchschnitt: 1 ms

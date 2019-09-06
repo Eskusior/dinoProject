@@ -3,7 +3,6 @@ var sessionID = "";
 
 // Verweise auf HTML Elemente zum ein-/ausblenden
 var mainMenu = document.getElementById("mainMenu");
-var impressum = document.getElementById("impressum");
 var menu = document.getElementById('menu');
 
 // Webservice BaseURL
@@ -30,7 +29,6 @@ function getQueryParams() {
 // Menü ausblenden und Spiel starten
 function initializeGame(sessionID) {
     mainMenu.style.display = 'none';
-    impressum.style.display = 'none';
     createWebSocketConnection(sessionID);
 }
 
@@ -61,18 +59,6 @@ async function fetchJSON(url, method, body = null) {
  
     let json = await res.json();
     return json;
-}
-
-// Klick auf Impressum
-function goToImpressum() {
-    mainMenu.style.display = "none";
-    impressum.style.display = "block";
-}
-
-// Zurück zum Hauptmenü
-function goBackToMainMenu() {
-    impressum.style.display = "none";
-    mainMenu.style.display = "block";
 }
 
 // Highscore holen, falls vorhanden
