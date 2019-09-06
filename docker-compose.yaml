@@ -16,9 +16,11 @@ services:
     ports:
       - 32192:3306
     environment:
-      MYSQL_ROOT_PASSWORD: ga4wm19
+      - MYSQL_ROOT_PASSWORD: ga4wm19
+      - MYSQL_DATABASE=dinoProject
     volumes:
       - ../data/MySQL/:/var/lib/mysql
+      - ./MySQL/startUpSQL.sql:/data/application/init.sql
 
   webserver:
      build: ./Webserver/
