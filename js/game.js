@@ -12,6 +12,8 @@ var frameNo = 0; // Anzahl der Frames
 var maxWidth = 50; // Größe des Canvas
 var maxHeight = 50;
 
+var updateInterval = null; // Interval zum Aktualisieren des Spiels
+
 var newSessionObject; // Objekt zum Speichern des Ausgangszustandes
 
 var restartButton = document.getElementById("restartButton");
@@ -43,7 +45,7 @@ function isMobile() {
 
 // Zusätzliche Optionen für Mobil laden
 function addMobileOptions() {
-	screen.orientation.lock('landscape');
+	screen.orientation.lock('landscape-primary');
 
 	maxWidth = 100;
 	maxHeight = 100;
@@ -100,7 +102,7 @@ var gameArea = {
 		frameNo = 0;
 
 		//window.setInterval(addOverTime, 5000);
-		window.requestAnimationFrame(loop);
+		startGameUpdateInverval();
 	}
 }
 
@@ -117,7 +119,7 @@ function setControllerOptions() {
 	window.setInterval(addOverTime, 5000);
 
 	// Spiel starten
-	window.requestAnimationFrame(loop);
+	startGameUpdateInverval();
 }
 
 function setInputListeners() {
@@ -397,27 +399,13 @@ function setControlRights() {
 }
 
 // Spielfluss
-loop = function() {
+update = function() {
 
 	// Sprung
 	if(controller.up && player.jumping == false) {
 		player.speedY -= 20;
 		player.jumping = true;
 	}
-
-	// Ducken
-	//if(controller.down && player.crouching == false) {
-	//	player.height = 20;
-	//	player.y += 20;
-	//	player.crouching = true;
-	//}
-
-	// Reset, falls Ducken gedrückt
-	//if(player.height > 40){
-	//	player.height = 40;
-	//	player.crouching = false;
-	//}
-
 
 	// Gravitation
 	player.speedY += 1.3;
@@ -430,8 +418,6 @@ loop = function() {
 		player.y = 210;
 		player.speedY = 0;
 	}
-
-	//highscoreText.text = "HIGHSCORE: " + highscoreText.points;
 
     // Score erhöhen
 	scoreText.points = Math.floor(scoreText.points + (1 * multiplier));
@@ -454,24 +440,17 @@ loop = function() {
     for (i = 0; i < obstacles.length; i+= 1) {
 		if(wasHit(obstacles[i], player)) {
 			player.dead = true;
-
+			clearInterval(updateInterval); // Spiel anhalten
 			// Wenn Score größer als Higscore ist übertragen
 			if(scoreText.points > highscoreText.points) {
 				highscoreText.points = scoreText.points;
 				highscoreText.text = "HIGHSCORE: " + highscoreText.points;
 				sendHighscoreToDB(scoreText.points);
 			}
-
 			restartButton.style.display = "block";
 			return;
 		}
     }
-
-	// Wenn Spieler Tod --> keine Aktualisierung mehr
-	if(player.dead == false) {
-		window.requestAnimationFrame(loop);
-		//sendScoreToBackend();
-	}
 	
 }
 
@@ -480,6 +459,11 @@ function restartGame() {
 
 	restartButton.style.display = "none";
 	gameArea.restart();
+}
+
+// Spielfluss starten
+function startGameUpdateInverval(){
+	updateInterval = setInterval(update, 1000/60);
 }
 
 // Wenn Spieler --> 60mal pro Sekunde Bild übertragen

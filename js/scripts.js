@@ -7,8 +7,8 @@ var impressum = document.getElementById("impressum");
 var menu = document.getElementById('menu');
 
 // Webservice BaseURL
-var baseURL = 'http://webengineering.ins.hs-anhalt.de:32193';
-//var baseURL = 'http://localhost:4000';
+//var baseURL = 'http://webengineering.ins.hs-anhalt.de:32193';
+var baseURL = 'http://localhost:4000';
 
 // Neues Spiel Klick --> Session erstellen und Redirect
 function setNewGame() {
@@ -98,21 +98,3 @@ async function sendHighscoreToDB(highscore) {
 
     
 }
-
-// Register ServiceWorker
-/*
-window.addEventListener('load', e => {
-    //new PWAConfApp();
-    registerSW();
-});
-
-async function registerSW() {
-    if('serviceWorker' in navigator) {
-        try {
-            await navigator.serviceWorker.register('./service-worker.js');
-        } catch(e) {
-            alert('ServiceWorker registration failed. Sorry about that.');
-        }
-    } 
-}
-*/

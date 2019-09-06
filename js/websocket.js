@@ -1,6 +1,9 @@
 var webSocket;
 var sID;
 
+var startTime = new Date().getTime();
+
+
 // Websocketverbindung erstellen
 function createWebSocketConnection(sessionID) {
 
@@ -47,6 +50,13 @@ function createWebSocketConnection(sessionID) {
                 break;
         }
 
+        let currTime = new Date().getTime();
+
+        // Alle 5 Sekunden einen Timestamp loggen
+        if(currTime - startTime >= (5 * 1000)) {
+            evaluateTime(message.timestamp, currTime);
+        }   
+
     };
 
     // Error loggen
@@ -84,6 +94,17 @@ function sendControlWish() {
         "action" : "setControl",
         "sessionID": sID
     }
-    console.log("controlWish send");
     websocket.send(JSON.stringify(message));
+}
+
+// Zeitoffset zwischen Erstellung und Bearbeitung Nachricht an Websocket senden
+async function evaluateTime(mTimestamp, currTime) {
+    let offset = currTime - mTimestamp;
+    let message = {
+        "action": "log",
+        "sessionID": sID,
+        "timeOffset": offset
+    }
+    websocket.send(JSON.stringify(message));
+    startTime = currTime;
 }
