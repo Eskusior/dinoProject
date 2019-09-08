@@ -124,61 +124,42 @@ function setControllerOptions() {
 
 function setInputListeners() {
 	// Tastatureingabe
-	window.addEventListener("keydown", keyboardInput);
-	window.addEventListener("keyup", keyboardInput);
+	window.addEventListener("keydown", event => {
+		if(event.keyCode == 38) {
+			setInput(event.type, "keydown");
+		}
+	}); 
+	window.addEventListener("keyup",event => {
+		if(event.keyCode == 38) {
+			setInput(event.type, "keydown");
+		}
+	}); 
 
 	// Mauseingabe
-	window.addEventListener("mousedown", mouseInput);
-	window.addEventListener("mouseup", mouseInput);
+	window.addEventListener("mousedown", event => {
+		setInput(event.type, "mousedown");
+	}); 
+	window.addEventListener("mouseup", event => {
+		setInput(event.type, "mousedown");
+	}); 
 
 	// Toucheingabe
-	window.addEventListener("touchstart", touchInput);
-	window.addEventListener("touchend", touchInput);
-
-	// Motioneingabe
-	window.addEventListener("devicemotion", motionInput);
+	window.addEventListener("touchstart", event => {
+		setInput(event.type, "touchstart");
+	}); 
+	window.addEventListener("touchend", event => {
+		setInput(event.type, "touchstart");
+	}); 
 
 }
 
-// Tastatureingabe
-function keyboardInput(event) {
-	var key_state = (event.type == "keydown") ? true : false;
-
-		switch(event.keyCode) {
-
-			// up
-			case 38: 
-				controller.up = key_state;
-				break;
-			// down
-			case 40:
-				controller.down = key_state;
-				break;
-
-		}
-}
-
-// Mauseingabe
-function mouseInput(event) {
-	var key_state = (event.type == "mousedown") ? true : false;
-
+// Input in Befehl umwandeln
+function setInput(eventType, startEvent) {
+	var key_state = (eventType == startEvent) ? true : false;
+	
 	controller.up = key_state;
 }
 
-// Toucheingabe
-function touchInput(event) {
-	var key_state = (event.type == "touchstart") ? true : false;
-
-	controller.up = key_state;
-}
-
-// Motioneingabe
-function motionInput(event) {
-	var key_state = (event.type == "mousedown") ? true : false;
-
-	controller.up = key_state;
-
-}
 
 // Spieler
 var player = {
@@ -246,9 +227,9 @@ function wasHit(obstacle, player ) {
 // ScoreText
 var scoreText = {
 	x: vw(1),
-	y: 40,
+	y: 20,
 	points: 0,
-	fontSize: "24px",
+	fontSize: "18px",
 	fontStyle: "Consolas",
 	color: "white"
 }
@@ -256,9 +237,9 @@ var scoreText = {
 // Highscore
 var highscoreText = {
 	x: vw(1),
-	y: vh(maxHeight - 2),
+	y: 40,
 	points: 0,
-	fontSize: "24px",
+	fontSize: "18px",
 	fontStyle: "Consolas",
 	color: "white"
 }
