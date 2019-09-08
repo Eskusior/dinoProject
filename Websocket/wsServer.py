@@ -9,12 +9,15 @@ import json
 import logging
 import websockets
 import time
+import requests
 
 logging.basicConfig()
 
 usersWithoutID = set() # Array für User ohne zugeordnete ID
 
 usersWithID = set() # Array für User mit ID
+
+sessionLogs = set()
 
 # Klasse für einen User
 class user:
@@ -24,6 +27,13 @@ class user:
         self.session_id = id
         self.canControl = control
         self.websocket = websocket
+
+# Klasse für eine Logdatei
+class sessionLog:
+    session_id = 0
+    time_data = []
+    def __init__(self, id):
+        self.session_id = id
 
 
 # In[2]:
@@ -92,6 +102,37 @@ async def sendMessageToNewPlayer(sessionID, websocket):
     newMessage = await generateMessage(sessionID, 'isNewController', 'Sie haben die Steuerung übernommen!')
     await sendMessageToUser(websocket, newMessage)
 
+# Zu einer Session einen neuen Zeitwert hinzufügen
+async def logNewTime(sessionID, timeOffset):
+    if sessionLogs:
+        for session in sessionLogs.copy():
+            if(session.session_id == sessionID):
+                session.time_data.append(timeOffset)
+                
+# Wenn alle Spieler aus Session raus --> Log an Backend senden
+async def sendLogDataToBackend(sessionID):
+    #url = 'http://webengineering.ins.hs-anhalt.de:32193/log/' + sessionID
+    url = 'http://webengineering.ins.hs-anhalt.de:32193/log/' + sessionID
+    if sessionLogs:
+        for session in sessionLogs.copy():
+            if(session.session_id == sessionID):
+                httpData = {
+                    "sessionID": sessionID,
+                    "timeData": session.time_data
+                }
+                headers = {'content-type': 'application/json'}
+                requests.put(url, data=json.dumps(httpData), headers=headers)
+                sessionLogs.remove(session)
+
+# Überprüft, ob noch Nutzer einer Session vorhanden sind
+async def checkUserArrayOnSession(sessionID):
+    if usersWithID:
+        for user in usersWithID:
+            if user.session_id == sessionID:
+                return True
+            
+    return False
+                
 # Registriere neuen Nutzer ohne ID
 async def registerUserWithoutID(websocket):
     usersWithoutID.add(websocket)
@@ -105,6 +146,9 @@ async def registerUserWithID(websocket, sessionID):
     # Registrierungsnachricht an User mit Steuerrechten
     if(canControl):
         newMessage = await generateMessage(sessionID, 'registered control', 'Nutzer wurde mit Steuerrechten registriert')
+        # Wenn neue Sesssion, oder Session neu geladen --> Log erstellen
+        newSessionLog = sessionLog(sessionID)
+        sessionLogs.add(newSessionLog)
     else:
         newMessage = await generateMessage(sessionID, 'registered noControl', 'Nutzer wurde ohne Steuerrechten registriert')
         
@@ -130,18 +174,23 @@ async def unregisterUser(websocket):
     await unregisterUserWithoutID(websocket)
     
     # Wenn User der Spieler war --> neuen Spieler anfordern
-    if(wasController and usersWithID):
+    if(wasController and await checkUserArrayOnSession(session_id)):
         await sendMessageForNewController(session_id)
+    elif not await checkUserArrayOnSession(session_id):
+        await sendLogDataToBackend(session_id)
 
 # Auswerten der empfangenen Nachricht
 async def evaluateMessage(message, websocket):
     # Registrieren als neuer Nutzer mit ID
+    print(message["action"])
     if message["action"] == "register":
         await registerUserWithID(websocket, message["sessionID"])
     elif message["action"] == 'setControl':
         await changeControlStatus(message["sessionID"], websocket)
     elif message["action"] == 'update':
         await sendCanvasUpdate(message["sessionID"], message["canvasData"])
+    elif message["action"] == 'log':
+        await logNewTime(message['sessionID'], message['timeOffset'])
     else:
         logging.error("unsupported event: {}", message)
     
@@ -155,14 +204,18 @@ async def wsServer(websocket, path):
         await unregisterUser(websocket)
 
 
+# In[ ]:
+
+
+
+
+
 # In[3]:
 
 
-start_server = websockets.serve(wsServer, "localhost", 6789)
+start_server = websockets.serve(wsServer, host="0.0.0.0", port="6789")
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()
-
-
 
 

@@ -9,6 +9,8 @@
 # 
 # GET /highscore/{id} : Liefert zu einer Session-ID den Highscore zurück <br/>
 # POST /highscore/{id} : Aktualisiert bei einer Session den Highscore oder legt ihn neu an
+# 
+# PUT /log/{id} : Erstellt aus übertragenen Zeiten eine Logdatei und speichert diese in DB
 
 # In[1]:
 
@@ -22,6 +24,7 @@ from flask import jsonify, redirect
 import optparse
 import mysql.connector
 import uuid
+import os
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}}) # CORS
@@ -65,7 +68,6 @@ class getOrAddHighscore(Resource):
             return jsonify({'status': 'none or more than one highscore found', 'statuscode': 409})
         
     def post(self, id):
-        print(request.json)
         if not request.json or not "highscore" in request.json or not "sessionID" in request.json:
             return jsonify({'status': 'could not update highscore', 'statuscode': 409})
         else:
@@ -76,6 +78,42 @@ class getOrAddHighscore(Resource):
             mydb.commit()
             mydb.disconnect()
             return jsonify({'status': 'updated highscore with id: ' + request.json["sessionID"], 'statuscode': 200})
+        
+class logTimestampsInDB(Resource):
+    def put(self, id):
+        if not request.json or not "timeData" in request.json or not "sessionID" in request.json:
+            print("Error on Logging Timedata for Session: " + id)
+        else:
+            # Zeitdaten in File schreiben
+            filename = id + '.txt'
+            file = open(filename, "w+")
+            
+            timeData = request.json["timeData"]
+            
+            for time in timeData:
+                file.write("Offset: %d ms\r\n" % time)
+            
+            # Durchschnitt bilden und hinzufügen
+            average = sum(timeData) / len(timeData)
+            file.write("Durchschnitt: %d ms\r\n" % average)
+            
+            file.close()
+            
+            # Blob erstellen
+            binaryData = convertToBlob(filename)
+            
+            sql = "INSERT INTO dinoProject.logTable (sessionID, logFile) VALUES (%s, %s) ON DUPLICATE KEY UPDATE logFile = %s"
+            values = (id, binaryData, binaryData)
+            mydb.reconnect(attempts = 1 , delay = 0)
+            mycursor.execute(sql, values)
+            mydb.commit()
+            mydb.disconnect()
+            os.remove(filename)
+            
+def convertToBlob(filename):
+    with open(filename, 'rb') as file:
+                binaryData = file.read()
+    return binaryData
 
 
 # In[ ]:
@@ -84,8 +122,9 @@ class getOrAddHighscore(Resource):
 # Klassen an entsprechende URLs binden
 api.add_resource(createSession, '/game')
 api.add_resource(getOrAddHighscore, '/highscore/<id>')
+api.add_resource(logTimestampsInDB, '/log/<id>')
 
-# Run für Testzwecke, startet auf localhost:5000
+# Run für Testzwecke, startet auf localhost:4000
 #if __name__ == "__main__":
  #   app.run(port=4000)
 
