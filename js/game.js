@@ -305,6 +305,7 @@ function buildWsMessage() {
 		"player": player,
 		"obstacles": obstacles,
 		"score": scoreText,
+		"highscore": highscoreText,
 		"multiplier": multiplier,
 		"frameNo": frameNo
 	}
@@ -323,6 +324,7 @@ function updateCanvas(data) {
 	player = data.player;
 	obstacles = data.obstacles;
 	scoreText = data.score;
+	highscoreText = data.highscore;
 	multiplier = data.multiplier;
 	frameNo = data.frameNo;
 
